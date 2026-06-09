@@ -28,7 +28,9 @@ import type {
   AuthResponse,
   HealthStatus,
   ListArticlesParams,
-  LoginInput
+  LoginInput,
+  SearchArticlesParams,
+  SearchResult
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -192,6 +194,90 @@ export function useListArticles<TData = Awaited<ReturnType<typeof listArticles>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListArticlesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSearchArticlesUrl = (params?: SearchArticlesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/articles/search?${stringifiedParams}` : `/api/articles/search`
+}
+
+/**
+ * @summary Search articles by keyword and optional category
+ */
+export const searchArticles = async (params?: SearchArticlesParams, options?: RequestInit): Promise<SearchResult> => {
+
+  return customFetch<SearchResult>(getSearchArticlesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchArticlesQueryKey = (params?: SearchArticlesParams,) => {
+    return [
+    `/api/articles/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchArticlesQueryOptions = <TData = Awaited<ReturnType<typeof searchArticles>>, TError = ErrorType<unknown>>(params?: SearchArticlesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchArticles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchArticlesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchArticles>>> = ({ signal }) => searchArticles(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchArticles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchArticlesQueryResult = NonNullable<Awaited<ReturnType<typeof searchArticles>>>
+export type SearchArticlesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Search articles by keyword and optional category
+ */
+
+export function useSearchArticles<TData = Awaited<ReturnType<typeof searchArticles>>, TError = ErrorType<unknown>>(
+ params?: SearchArticlesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchArticles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchArticlesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

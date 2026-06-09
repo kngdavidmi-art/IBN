@@ -66,6 +66,13 @@ export interface ArticlesSummary {
   byCategory: ArticlesSummaryByCategoryItem[];
 }
 
+export interface SearchResult {
+  results: Article[];
+  total: number;
+  query: string;
+  category: string;
+}
+
 export interface LoginInput {
   username: string;
   password: string;
@@ -82,6 +89,16 @@ export interface AuthResponse {
 }
 
 export type ListArticlesParams = {
+category?: string;
+limit?: number;
+offset?: number;
+};
+
+export type SearchArticlesParams = {
+/**
+ * Keyword to search in title, subtitle, and content
+ */
+q?: string;
 category?: string;
 limit?: number;
 offset?: number;

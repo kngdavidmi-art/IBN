@@ -43,6 +43,37 @@ export const ListArticlesResponse = zod.array(ListArticlesResponseItem)
 
 
 /**
+ * @summary Search articles by keyword and optional category
+ */
+export const SearchArticlesQueryParams = zod.object({
+  "q": zod.coerce.string().optional().describe('Keyword to search in title, subtitle, and content'),
+  "category": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().optional(),
+  "offset": zod.coerce.number().optional()
+})
+
+export const SearchArticlesResponse = zod.object({
+  "results": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "author": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "isFeatured": zod.boolean(),
+  "isBreaking": zod.boolean(),
+  "publishedAt": zod.coerce.date(),
+  "createdAt": zod.coerce.date().optional()
+})),
+  "total": zod.number(),
+  "query": zod.string(),
+  "category": zod.string()
+})
+
+
+/**
  * @summary Get featured/breaking news articles
  */
 export const GetFeaturedArticlesResponseItem = zod.object({

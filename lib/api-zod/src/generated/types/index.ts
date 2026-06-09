@@ -16,3 +16,5 @@ export * from './authResponse';
 export * from './healthStatus';
 export * from './listArticlesParams';
 export * from './loginInput';
+export * from './searchArticlesParams';
+export * from './searchResult';

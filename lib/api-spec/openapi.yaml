@@ -60,6 +60,41 @@ paths:
                 items:
                   $ref: "#/components/schemas/Article"
 
+  /articles/search:
+    get:
+      operationId: searchArticles
+      tags: [articles]
+      summary: Search articles by keyword and optional category
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Keyword to search in title, subtitle, and content
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResult"
+
   /articles/featured:
     get:
       operationId: getFeaturedArticles
@@ -356,6 +391,21 @@ components:
                 type: string
               count:
                 type: integer
+
+    SearchResult:
+      type: object
+      required: [results, total, query, category]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+        total:
+          type: integer
+        query:
+          type: string
+        category:
+          type: string
 
     LoginInput:
       type: object

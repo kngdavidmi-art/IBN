@@ -14,8 +14,13 @@ const categories = [
 ];
 
 export function Navbar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleSearchClick = () => {
+    setLocation("/search");
+    setIsOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
@@ -44,17 +49,23 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`hidden md:inline-flex ${location === '/search' ? 'text-primary' : ''}`}
+            onClick={handleSearchClick}
+            aria-label="Search"
+          >
             <Search className="h-5 w-5" />
           </Button>
-          
+
           <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
             <Link href="/login">Admin</Link>
           </Button>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="md:hidden"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -75,8 +86,14 @@ export function Navbar() {
               </span>
             </Link>
           ))}
+          <button
+            onClick={handleSearchClick}
+            className="flex items-center gap-2 text-lg font-semibold text-muted-foreground mt-2 text-left"
+          >
+            <Search className="h-4 w-4" /> Search
+          </button>
           <Link href="/login">
-            <span className="text-lg font-semibold cursor-pointer block text-muted-foreground mt-4" onClick={() => setIsOpen(false)}>Admin</span>
+            <span className="text-lg font-semibold cursor-pointer block text-muted-foreground mt-2" onClick={() => setIsOpen(false)}>Admin</span>
           </Link>
         </div>
       )}
