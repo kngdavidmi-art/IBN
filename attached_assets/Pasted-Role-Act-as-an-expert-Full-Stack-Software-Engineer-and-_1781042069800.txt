@@ -1,0 +1,27 @@
+Role: Act as an expert Full-Stack Software Engineer and UI/UX Designer specialized in media and news portal architectures.
+
+Task: Build a dynamic, responsive news website named "IBN" inspired by the layouts of BBC and CNN, featuring a public news frontend and a secure, role-protected Admin/Editor dashboard.
+
+Tech Stack Preference: Node.js (Express), Tailwind CSS (via CDN or standard setup for clean UI), and a lightweight database like SQLite or Replit PostgreSQL to store news articles and admin credentials.
+
+Core Features to Implement:
+
+1. Public Frontend (CNN/BBC Style):
+- A clean, professional top navigation bar with news categories (e.g., Home, World, Tech, Business, Videos).
+- A dynamic homepage grid: A large "Hero" slot for the breaking/top story, followed by smaller card layouts for secondary articles grouped by section.
+- Individual article pages (`/news/:id`) that display the full text, publication date, author, images, and embedded video players if a video link is provided.
+
+2. Authentication & Security:
+- A secure login page (`/login`) for Admins and Editors.
+- Implement session-based authentication or JWT.
+- Protect the dashboard route (`/admin`). If an unauthenticated user or regular guest tries to access any URL starting with `/admin`, automatically redirect them back to the home page or a 403 error page.
+
+3. Admin/Editor Dashboard (`/admin`):
+- A clean, private workspace sidebar to manage content.
+- A "Create Post" interface: A form with inputs for Title, Subtitle, Category (dropdown), Content/Body, Featured Image URL, and Video URL (supporting YouTube/Vimeo embeds or direct links).
+- A "Manage Posts" table listing all published articles with quick action buttons to "Edit" or "Delete" existing stories.
+
+Design & Experience Guidelines:
+- Use a high-end corporate color palette (clean whites/light grays, dark charcoal text, and a distinct accent color like deep crimson or navy for breaking news badges).
+- Ensure 100% mobile responsiveness. Layout grids must seamlessly transition to a single-column stack on mobile devices.
+- Include a few realistic mock news articles pre-loaded into the database upon initialization so the site doesn't look empty on the first run.
