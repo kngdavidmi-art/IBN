@@ -13,6 +13,9 @@ import Login from "@/pages/Login";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminPosts from "@/pages/AdminPosts";
 import AdminPostForm from "@/pages/AdminPostForm";
+import SignUp from "@/pages/SignUp";
+import AdminEditors from "@/pages/AdminEditors";
+import AdminEngagement from "@/pages/AdminEngagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,10 +34,13 @@ function Router() {
       <Route path="/category/:name" component={Category} />
       <Route path="/search" component={SearchPage} />
       <Route path="/login" component={Login} />
+      <Route path="/signup" component={SignUp} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/posts" component={AdminPosts} />
       <Route path="/admin/posts/new" component={AdminPostForm} />
       <Route path="/admin/posts/:id/edit" component={AdminPostForm} />
+      <Route path="/admin/editors" component={AdminEditors} />
+      <Route path="/admin/engagement" component={AdminEngagement} />
       <Route component={NotFound} />
     </Switch>
   );

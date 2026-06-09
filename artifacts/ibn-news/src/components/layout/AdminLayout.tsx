@@ -1,7 +1,7 @@
 import { useLocation, Link } from "wouter";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
 import { useEffect } from "react";
-import { LayoutDashboard, FileText, PlusCircle, LogOut, Settings, Newspaper } from "lucide-react";
+import { LayoutDashboard, FileText, PlusCircle, LogOut, Settings, Newspaper, Users, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,6 +39,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: "Manage Posts", href: "/admin/posts", icon: <FileText className="h-5 w-5" /> },
     { name: "New Post", href: "/admin/posts/new", icon: <PlusCircle className="h-5 w-5" /> },
   ];
+
+  if (user?.role === "admin") {
+    navItems.push(
+      { name: "Team", href: "/admin/editors", icon: <Users className="h-5 w-5" /> },
+      { name: "Engagement", href: "/admin/engagement", icon: <BarChart2 className="h-5 w-5" /> }
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

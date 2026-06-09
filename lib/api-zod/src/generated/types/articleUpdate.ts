@@ -7,7 +7,6 @@
  */
 
 export interface ArticleUpdate {
-  /** @minLength 1 */
   title?: string;
   subtitle?: string;
   category?: string;

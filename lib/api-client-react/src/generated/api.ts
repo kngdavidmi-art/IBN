@@ -26,11 +26,16 @@ import type {
   ArticleUpdate,
   ArticlesSummary,
   AuthResponse,
+  CreateEditorInput,
+  EditorUser,
+  EngagementStats,
   HealthStatus,
   ListArticlesParams,
   LoginInput,
   SearchArticlesParams,
-  SearchResult
+  SearchResult,
+  SignUpInput,
+  UpdateEditorInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -453,7 +458,7 @@ export const getGetArticleUrl = (id: number,) => {
 }
 
 /**
- * @summary Get a single article
+ * @summary Get a single article (also increments view count)
  */
 export const getArticle = async (id: number, options?: RequestInit): Promise<Article> => {
 
@@ -500,7 +505,7 @@ export type GetArticleQueryError = ErrorType<void>
 
 
 /**
- * @summary Get a single article
+ * @summary Get a single article (also increments view count)
  */
 
 export function useGetArticle<TData = Awaited<ReturnType<typeof getArticle>>, TError = ErrorType<void>>(
@@ -530,7 +535,7 @@ export const getLoginUrl = () => {
 }
 
 /**
- * @summary Admin login
+ * @summary Admin/Editor login
  */
 export const login = async (loginInput: LoginInput, options?: RequestInit): Promise<AuthResponse> => {
 
@@ -579,7 +584,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LoginMutationError = ErrorType<void>
 
     /**
- * @summary Admin login
+ * @summary Admin/Editor login
  */
 export const useLogin = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -738,6 +743,77 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+
+export const getSignUpUrl = () => {
+
+
+
+
+  return `/api/auth/signup`
+}
+
+/**
+ * @summary Register a new editor account
+ */
+export const signUp = async (signUpInput: SignUpInput, options?: RequestInit): Promise<AdminUser> => {
+
+  return customFetch<AdminUser>(getSignUpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signUpInput,)
+  }
+);}
+
+
+
+
+export const getSignUpMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext> => {
+
+const mutationKey = ['signUp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signUp>>, {data: BodyType<SignUpInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signUp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignUpMutationResult = NonNullable<Awaited<ReturnType<typeof signUp>>>
+    export type SignUpMutationBody = BodyType<SignUpInput>
+    export type SignUpMutationError = ErrorType<void>
+
+    /**
+ * @summary Register a new editor account
+ */
+export const useSignUp = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,{data: BodyType<SignUpInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof signUp>>,
+        TError,
+        {data: BodyType<SignUpInput>},
+        TContext
+      > => {
+      return useMutation(getSignUpMutationOptions(options));
+    }
 
 export const getAdminListArticlesUrl = () => {
 
@@ -1105,4 +1181,371 @@ export const useDeleteArticle = <TError = ErrorType<void>,
       > => {
       return useMutation(getDeleteArticleMutationOptions(options));
     }
+
+export const getListEditorsUrl = () => {
+
+
+
+
+  return `/api/admin/editors`
+}
+
+/**
+ * @summary List all editors/admins (admin-role only)
+ */
+export const listEditors = async ( options?: RequestInit): Promise<EditorUser[]> => {
+
+  return customFetch<EditorUser[]>(getListEditorsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEditorsQueryKey = () => {
+    return [
+    `/api/admin/editors`
+    ] as const;
+    }
+
+
+export const getListEditorsQueryOptions = <TData = Awaited<ReturnType<typeof listEditors>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEditorsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEditors>>> = ({ signal }) => listEditors({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEditors>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEditorsQueryResult = NonNullable<Awaited<ReturnType<typeof listEditors>>>
+export type ListEditorsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all editors/admins (admin-role only)
+ */
+
+export function useListEditors<TData = Awaited<ReturnType<typeof listEditors>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditors>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEditorsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateEditorUrl = () => {
+
+
+
+
+  return `/api/admin/editors`
+}
+
+/**
+ * @summary Create a new editor account (admin-role only)
+ */
+export const createEditor = async (createEditorInput: CreateEditorInput, options?: RequestInit): Promise<EditorUser> => {
+
+  return customFetch<EditorUser>(getCreateEditorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createEditorInput,)
+  }
+);}
+
+
+
+
+export const getCreateEditorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEditor>>, TError,{data: BodyType<CreateEditorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEditor>>, TError,{data: BodyType<CreateEditorInput>}, TContext> => {
+
+const mutationKey = ['createEditor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEditor>>, {data: BodyType<CreateEditorInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEditor(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEditorMutationResult = NonNullable<Awaited<ReturnType<typeof createEditor>>>
+    export type CreateEditorMutationBody = BodyType<CreateEditorInput>
+    export type CreateEditorMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a new editor account (admin-role only)
+ */
+export const useCreateEditor = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEditor>>, TError,{data: BodyType<CreateEditorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createEditor>>,
+        TError,
+        {data: BodyType<CreateEditorInput>},
+        TContext
+      > => {
+      return useMutation(getCreateEditorMutationOptions(options));
+    }
+
+export const getUpdateEditorUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/editors/${id}`
+}
+
+/**
+ * @summary Update editor (password or role) - admin-role only
+ */
+export const updateEditor = async (id: number,
+    updateEditorInput: UpdateEditorInput, options?: RequestInit): Promise<EditorUser> => {
+
+  return customFetch<EditorUser>(getUpdateEditorUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateEditorInput,)
+  }
+);}
+
+
+
+
+export const getUpdateEditorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditor>>, TError,{id: number;data: BodyType<UpdateEditorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEditor>>, TError,{id: number;data: BodyType<UpdateEditorInput>}, TContext> => {
+
+const mutationKey = ['updateEditor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEditor>>, {id: number;data: BodyType<UpdateEditorInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEditor(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEditorMutationResult = NonNullable<Awaited<ReturnType<typeof updateEditor>>>
+    export type UpdateEditorMutationBody = BodyType<UpdateEditorInput>
+    export type UpdateEditorMutationError = ErrorType<void>
+
+    /**
+ * @summary Update editor (password or role) - admin-role only
+ */
+export const useUpdateEditor = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditor>>, TError,{id: number;data: BodyType<UpdateEditorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEditor>>,
+        TError,
+        {id: number;data: BodyType<UpdateEditorInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateEditorMutationOptions(options));
+    }
+
+export const getDeleteEditorUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/editors/${id}`
+}
+
+/**
+ * @summary Remove an editor - admin-role only
+ */
+export const deleteEditor = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEditorUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEditorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEditor>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteEditor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEditor>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEditor(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEditorMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEditor>>>
+
+    export type DeleteEditorMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove an editor - admin-role only
+ */
+export const useDeleteEditor = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEditor>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteEditorMutationOptions(options));
+    }
+
+export const getGetEngagementUrl = () => {
+
+
+
+
+  return `/api/admin/engagement`
+}
+
+/**
+ * @summary Get post engagement statistics
+ */
+export const getEngagement = async ( options?: RequestInit): Promise<EngagementStats> => {
+
+  return customFetch<EngagementStats>(getGetEngagementUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEngagementQueryKey = () => {
+    return [
+    `/api/admin/engagement`
+    ] as const;
+    }
+
+
+export const getGetEngagementQueryOptions = <TData = Awaited<ReturnType<typeof getEngagement>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEngagement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEngagementQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEngagement>>> = ({ signal }) => getEngagement({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEngagement>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEngagementQueryResult = NonNullable<Awaited<ReturnType<typeof getEngagement>>>
+export type GetEngagementQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get post engagement statistics
+ */
+
+export function useGetEngagement<TData = Awaited<ReturnType<typeof getEngagement>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEngagement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEngagementQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

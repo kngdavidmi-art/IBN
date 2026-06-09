@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, articlesTable } from "@workspace/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -55,6 +55,12 @@ router.get("/articles/:id", async (req, res) => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  // Increment view count asynchronously — don't block the response
+  db.update(articlesTable)
+    .set({ viewCount: sql`${articlesTable.viewCount} + 1` })
+    .where(eq(articlesTable.id, id))
+    .catch(() => {});
+
   res.json(article);
 });
 

@@ -23,6 +23,7 @@ export interface Article {
   videoUrl?: string | null;
   isFeatured: boolean;
   isBreaking: boolean;
+  viewCount: number;
   publishedAt: string;
   createdAt?: string;
 }
@@ -42,7 +43,6 @@ export interface ArticleInput {
 }
 
 export interface ArticleUpdate {
-  /** @minLength 1 */
   title?: string;
   subtitle?: string;
   category?: string;
@@ -78,6 +78,13 @@ export interface LoginInput {
   password: string;
 }
 
+export interface SignUpInput {
+  /** @minLength 3 */
+  username: string;
+  /** @minLength 6 */
+  password: string;
+}
+
 export interface AdminUser {
   id: number;
   username: string;
@@ -88,6 +95,65 @@ export interface AuthResponse {
   user: AdminUser;
 }
 
+export interface EditorUser {
+  id: number;
+  username: string;
+  role: string;
+  /** @nullable */
+  lastLoginAt?: string | null;
+  createdAt: string;
+}
+
+export type CreateEditorInputRole = typeof CreateEditorInputRole[keyof typeof CreateEditorInputRole];
+
+
+export const CreateEditorInputRole = {
+  admin: 'admin',
+  editor: 'editor',
+} as const;
+
+export interface CreateEditorInput {
+  /** @minLength 3 */
+  username: string;
+  /** @minLength 6 */
+  password: string;
+  role: CreateEditorInputRole;
+}
+
+export type UpdateEditorInputRole = typeof UpdateEditorInputRole[keyof typeof UpdateEditorInputRole];
+
+
+export const UpdateEditorInputRole = {
+  admin: 'admin',
+  editor: 'editor',
+} as const;
+
+export interface UpdateEditorInput {
+  /** @minLength 6 */
+  password?: string;
+  role?: UpdateEditorInputRole;
+}
+
+export type EngagementStatsTopArticlesItem = {
+  id: number;
+  title: string;
+  category: string;
+  author: string;
+  viewCount: number;
+  publishedAt: string;
+};
+
+export type EngagementStatsViewsByCategoryItem = {
+  category: string;
+  views: number;
+};
+
+export interface EngagementStats {
+  totalViews: number;
+  topArticles: EngagementStatsTopArticlesItem[];
+  viewsByCategory: EngagementStatsViewsByCategoryItem[];
+}
+
 export type ListArticlesParams = {
 category?: string;
 limit?: number;
@@ -95,9 +161,6 @@ offset?: number;
 };
 
 export type SearchArticlesParams = {
-/**
- * Keyword to search in title, subtitle, and content
- */
 q?: string;
 category?: string;
 limit?: number;

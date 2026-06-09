@@ -20,6 +20,7 @@ export interface Article {
   videoUrl?: string | null;
   isFeatured: boolean;
   isBreaking: boolean;
+  viewCount: number;
   publishedAt: Date;
   createdAt?: Date;
 }

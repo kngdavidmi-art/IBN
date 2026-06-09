@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SearchArticlesParams = {
-q?: string;
-category?: string;
-limit?: number;
-offset?: number;
-};
+export interface SignUpInput {
+  /** @minLength 3 */
+  username: string;
+  /** @minLength 6 */
+  password: string;
+}

@@ -1,8 +1,8 @@
-import { Link, useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLogin, useGetMe } from "@workspace/api-client-react";
+import { useSignUp, useGetMe } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,23 +11,27 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+const signUpSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type SignUpForm = z.infer<typeof signUpSchema>;
 
-export default function Login() {
+export default function SignUp() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   const { data: user, isLoading: isCheckingAuth } = useGetMe({ query: { retry: false } });
-  const loginMutation = useLogin();
+  const signUpMutation = useSignUp();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { username: "", password: "" }
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { username: "", password: "", confirmPassword: "" }
   });
 
   useEffect(() => {
@@ -36,18 +40,26 @@ export default function Login() {
     }
   }, [user, isCheckingAuth, setLocation]);
 
-  const onSubmit = async (data: LoginForm) => {
-    loginMutation.mutate({ data }, {
+  const onSubmit = async (data: SignUpForm) => {
+    signUpMutation.mutate({ data: { username: data.username, password: data.password } }, {
       onSuccess: () => {
-        toast({ title: "Login successful", description: "Welcome back." });
-        setLocation("/admin");
+        toast({ title: "Account created! Please wait for admin approval." });
+        setLocation("/login");
       },
       onError: (error: any) => {
-        toast({ 
-          title: "Login failed", 
-          description: error?.message || "Invalid username or password.",
-          variant: "destructive"
-        });
+        if (error?.status === 409) {
+          toast({ 
+            title: "Sign up failed", 
+            description: "Username already taken",
+            variant: "destructive"
+          });
+        } else {
+          toast({ 
+            title: "Sign up failed", 
+            description: error?.message || "An error occurred during sign up.",
+            variant: "destructive"
+          });
+        }
       }
     });
   };
@@ -67,9 +79,9 @@ export default function Login() {
           <div className="mx-auto bg-primary text-white w-16 h-16 flex items-center justify-center rounded-sm mb-4">
             <span className="font-serif text-3xl font-bold">IBN</span>
           </div>
-          <CardTitle className="text-2xl font-serif">Newsroom Access</CardTitle>
+          <CardTitle className="text-2xl font-serif">Request Editor Access</CardTitle>
           <CardDescription>
-            Enter your credentials to access the editorial dashboard
+            Register a new editor account
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
@@ -86,9 +98,7 @@ export default function Login() {
             </div>
             
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input 
                 id="password" 
                 type="password"
@@ -99,11 +109,23 @@ export default function Login() {
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting || loginMutation.isPending}>
-              {isSubmitting || loginMutation.isPending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Authenticating...</>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password"
+                placeholder="••••••••" 
+                {...register("confirmPassword")} 
+                className={errors.confirmPassword ? "border-destructive" : ""}
+              />
+              {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isSubmitting || signUpMutation.isPending}>
+              {isSubmitting || signUpMutation.isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...</>
               ) : (
-                "Sign In"
+                "Request Access"
               )}
             </Button>
           </form>
@@ -111,9 +133,9 @@ export default function Login() {
         <CardFooter className="flex flex-col justify-center text-sm text-muted-foreground pt-4 border-t">
           <p>© {new Date().getFullYear()} IBN News Network. Secure System.</p>
           <div className="text-center mt-4 text-sm text-muted-foreground">
-            New to IBN?{" "}
-            <Link href="/signup" className="text-primary hover:underline font-medium">
-              Request editor access
+            Already have an account?{" "}
+            <Link href="/login" className="text-primary hover:underline font-medium">
+              Sign in
             </Link>
           </div>
         </CardFooter>

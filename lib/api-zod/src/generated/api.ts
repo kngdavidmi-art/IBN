@@ -36,6 +36,7 @@ export const ListArticlesResponseItem = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -46,7 +47,7 @@ export const ListArticlesResponse = zod.array(ListArticlesResponseItem)
  * @summary Search articles by keyword and optional category
  */
 export const SearchArticlesQueryParams = zod.object({
-  "q": zod.coerce.string().optional().describe('Keyword to search in title, subtitle, and content'),
+  "q": zod.coerce.string().optional(),
   "category": zod.coerce.string().optional(),
   "limit": zod.coerce.number().optional(),
   "offset": zod.coerce.number().optional()
@@ -64,6 +65,7 @@ export const SearchArticlesResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })),
@@ -87,6 +89,7 @@ export const GetFeaturedArticlesResponseItem = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -108,7 +111,7 @@ export const GetArticlesSummaryResponse = zod.object({
 
 
 /**
- * @summary Get a single article
+ * @summary Get a single article (also increments view count)
  */
 export const GetArticleParams = zod.object({
   "id": zod.coerce.number()
@@ -125,13 +128,14 @@ export const GetArticleResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
 
 
 /**
- * @summary Admin login
+ * @summary Admin/Editor login
  */
 export const LoginBody = zod.object({
   "username": zod.string(),
@@ -158,6 +162,21 @@ export const GetMeResponse = zod.object({
 
 
 /**
+ * @summary Register a new editor account
+ */
+export const signUpBodyUsernameMin = 3;
+
+export const signUpBodyPasswordMin = 6;
+
+
+
+export const SignUpBody = zod.object({
+  "username": zod.string().min(signUpBodyUsernameMin),
+  "password": zod.string().min(signUpBodyPasswordMin)
+})
+
+
+/**
  * @summary List all articles (admin)
  */
 export const AdminListArticlesResponseItem = zod.object({
@@ -171,6 +190,7 @@ export const AdminListArticlesResponseItem = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -215,6 +235,7 @@ export const AdminGetArticleResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -227,11 +248,8 @@ export const UpdateArticleParams = zod.object({
   "id": zod.coerce.number()
 })
 
-
-
-
 export const UpdateArticleBody = zod.object({
-  "title": zod.string().min(1).optional(),
+  "title": zod.string().optional(),
   "subtitle": zod.string().optional(),
   "category": zod.string().optional(),
   "content": zod.string().optional(),
@@ -253,6 +271,7 @@ export const UpdateArticleResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -263,6 +282,88 @@ export const UpdateArticleResponse = zod.object({
  */
 export const DeleteArticleParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all editors/admins (admin-role only)
+ */
+export const ListEditorsResponseItem = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "role": zod.string(),
+  "lastLoginAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListEditorsResponse = zod.array(ListEditorsResponseItem)
+
+
+/**
+ * @summary Create a new editor account (admin-role only)
+ */
+export const createEditorBodyUsernameMin = 3;
+
+export const createEditorBodyPasswordMin = 6;
+
+
+
+export const CreateEditorBody = zod.object({
+  "username": zod.string().min(createEditorBodyUsernameMin),
+  "password": zod.string().min(createEditorBodyPasswordMin),
+  "role": zod.enum(['admin', 'editor'])
+})
+
+
+/**
+ * @summary Update editor (password or role) - admin-role only
+ */
+export const UpdateEditorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const updateEditorBodyPasswordMin = 6;
+
+
+
+export const UpdateEditorBody = zod.object({
+  "password": zod.string().min(updateEditorBodyPasswordMin).optional(),
+  "role": zod.enum(['admin', 'editor']).optional()
+})
+
+export const UpdateEditorResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "role": zod.string(),
+  "lastLoginAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove an editor - admin-role only
+ */
+export const DeleteEditorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get post engagement statistics
+ */
+export const GetEngagementResponse = zod.object({
+  "totalViews": zod.number(),
+  "topArticles": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "author": zod.string(),
+  "viewCount": zod.number(),
+  "publishedAt": zod.coerce.date()
+})),
+  "viewsByCategory": zod.array(zod.object({
+  "category": zod.string(),
+  "views": zod.number()
+}))
 })
 
 

@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { adminsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
+import type express from "express";
 
 const router = Router();
 
@@ -40,8 +41,6 @@ export function requireAuth(req: express.Request, res: express.Response, next: e
   next();
 }
 
-import type express from "express";
-
 router.post("/auth/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -53,6 +52,9 @@ router.post("/auth/login", async (req, res) => {
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
+  // Track last login
+  await db.update(adminsTable).set({ lastLoginAt: new Date() }).where(eq(adminsTable.id, admin.id));
+
   const token = signToken(admin.id, admin.username, admin.role);
   res.cookie("ibn_token", token, {
     httpOnly: true,
@@ -71,6 +73,36 @@ router.post("/auth/logout", (_req, res) => {
 router.get("/auth/me", requireAuth, (req, res) => {
   const user = (req as any).adminUser;
   res.json({ id: user.id, username: user.username, role: user.role });
+});
+
+router.post("/auth/signup", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.status(400).json({ error: "Username and password required" });
+    return;
+  }
+  if (username.length < 3) {
+    res.status(400).json({ error: "Username must be at least 3 characters" });
+    return;
+  }
+  if (password.length < 6) {
+    res.status(400).json({ error: "Password must be at least 6 characters" });
+    return;
+  }
+  const existing = await db
+    .select({ id: adminsTable.id })
+    .from(adminsTable)
+    .where(eq(adminsTable.username, username))
+    .limit(1);
+  if (existing.length > 0) {
+    res.status(409).json({ error: "Username already taken" });
+    return;
+  }
+  const [created] = await db
+    .insert(adminsTable)
+    .values({ username, passwordHash: hashPassword(password), role: "editor" })
+    .returning({ id: adminsTable.id, username: adminsTable.username, role: adminsTable.role });
+  res.status(201).json(created);
 });
 
 export default router;

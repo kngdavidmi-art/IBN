@@ -7,9 +7,10 @@ export const adminsTable = pgTable("admins", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull().default("editor"),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertAdminSchema = createInsertSchema(adminsTable).omit({ id: true, createdAt: true });
+export const insertAdminSchema = createInsertSchema(adminsTable).omit({ id: true, createdAt: true, lastLoginAt: true });
 export type InsertAdmin = z.infer<typeof insertAdminSchema>;
 export type Admin = typeof adminsTable.$inferSelect;
