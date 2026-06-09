@@ -1,10 +1,34 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { format } from "date-fns";
-import { useGetArticle, getGetArticleQueryKey } from "@workspace/api-client-react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { useGetArticle, getGetArticleQueryKey, useListArticles } from "@workspace/api-client-react";
+import { PageShell } from "@/components/layout/PageShell";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Twitter, Link2, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { readingTime } from "@/lib/readingTime";
+import { ArticleCard } from "@/components/ui/ArticleCard";
+
+function RelatedArticles({ category, currentArticleId }: { category: string, currentArticleId: number }) {
+  const { data: articles, isLoading } = useListArticles({ category, limit: 4 });
+  
+  if (isLoading) return null;
+  const filtered = articles?.filter(a => a.id !== currentArticleId).slice(0, 3) || [];
+  if (filtered.length === 0) return null;
+
+  return (
+    <section className="mt-16 border-t pt-12">
+      <h2 className="text-xl font-bold font-serif mb-6 border-b-2 border-primary inline-block pb-1">
+        More from {category}
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {filtered.map(article => (
+          <ArticleCard key={article.id} article={article} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -17,10 +41,29 @@ export default function ArticleDetail() {
     } 
   });
 
+  const [progress, setProgress] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = document.documentElement;
+      const scrolled = el.scrollTop;
+      const total = el.scrollHeight - el.clientHeight;
+      setProgress(total > 0 ? (scrolled / total) * 100 : 0);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
-      
+    <PageShell>
+      <div className="fixed top-0 left-0 z-[100] h-1 bg-primary transition-all" style={{ width: `${progress}%` }} />
       <main className="flex-1">
         {isLoading ? (
           <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -69,9 +112,24 @@ export default function ArticleDetail() {
                   <div>
                     <div className="font-bold text-sm">By {article.author}</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Published {format(new Date(article.publishedAt), 'h:mm a • MMM d, yyyy')}
+                      Published {format(new Date(article.publishedAt), 'h:mm a • MMM d, yyyy')} • {readingTime(article.content)}
                     </div>
                   </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" asChild>
+                    <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">
+                      <Twitter className="h-4 w-4" />
+                    </a>
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={handleCopyLink} title="Copy Link">
+                    <Link2 className={`h-4 w-4 ${copied ? 'text-green-500' : ''}`} />
+                  </Button>
+                  {'share' in navigator && (
+                    <Button variant="ghost" size="icon" onClick={() => navigator.share({ title: article.title, url: window.location.href })}>
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -105,11 +163,15 @@ export default function ArticleDetail() {
                 ))}
               </div>
             </div>
+
+            {article.category && (
+              <div className="container mx-auto px-4 max-w-4xl">
+                <RelatedArticles category={article.category} currentArticleId={article.id} />
+              </div>
+            )}
           </article>
         )}
       </main>
-
-      <Footer />
-    </div>
+    </PageShell>
   );
 }

@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useSearchArticles, getSearchArticlesQueryKey } from "@workspace/api-client-react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { PageShell } from "@/components/layout/PageShell";
 import { ArticleCard } from "@/components/ui/ArticleCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, X } from "lucide-react";
@@ -62,9 +61,7 @@ export default function SearchPage() {
   const showSkeleton = isActive && (isLoading || isFetching);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
-
+    <PageShell>
       <main className="flex-1">
         {/* Search Header */}
         <div className="border-b bg-muted/40">
@@ -172,8 +169,6 @@ export default function SearchPage() {
           )}
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </PageShell>
   );
 }

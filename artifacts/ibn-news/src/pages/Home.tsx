@@ -1,8 +1,8 @@
+import { Link } from "wouter";
 import { useGetFeaturedArticles, useListArticles } from "@workspace/api-client-react";
 import { HeroArticle } from "@/components/ui/HeroArticle";
 import { ArticleCard } from "@/components/ui/ArticleCard";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { PageShell } from "@/components/layout/PageShell";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
@@ -18,10 +18,27 @@ export default function Home() {
   const businessArticles = latest?.filter(a => a.category?.toLowerCase() === 'business').slice(0, 3) || [];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
+    <PageShell>
       <main className="flex-1">
+        {/* JUST IN Ticker */}
+        {latest && latest.length > 0 && (
+          <div className="bg-foreground text-background py-2 px-4 text-sm font-medium">
+            <div className="container mx-auto flex items-center overflow-hidden whitespace-nowrap">
+              <span className="font-bold tracking-widest uppercase mr-4 shrink-0 text-primary">JUST IN</span>
+              <div className="flex items-center space-x-4 animate-in fade-in slide-in-from-right-4">
+                {latest.slice(0, 4).map((article, i) => (
+                  <span key={article.id} className={`flex items-center ${i > 0 ? 'hidden md:flex' : ''}`}>
+                    {i > 0 && <span className="mr-4 opacity-50">|</span>}
+                    <Link href={`/news/${article.id}`} className="hover:underline truncate max-w-[200px] md:max-w-[300px]">
+                      {article.title} <span className="opacity-50 font-normal ml-1">— {article.category}</span>
+                    </Link>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section */}
         {isLoadingFeatured ? (
           <Skeleton className="w-full h-[60vh]" />
@@ -106,8 +123,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </PageShell>
   );
 }

@@ -2,7 +2,7 @@ import { useGetArticlesSummary } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Newspaper, Flame, Star, Activity } from "lucide-react";
+import { BookOpen, Zap, Star, LayoutGrid } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -38,10 +38,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
+        <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Total Articles</CardTitle>
-            <Newspaper className="h-4 w-4 text-slate-400" />
+            <BookOpen className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-900">{summary?.total || 0}</div>
@@ -49,10 +49,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Breaking News</CardTitle>
-            <Flame className="h-4 w-4 text-primary" />
+            <Zap className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-900">{summary?.breaking || 0}</div>
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Featured Stories</CardTitle>
             <Star className="h-4 w-4 text-amber-500" />
@@ -71,10 +71,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Categories</CardTitle>
-            <Activity className="h-4 w-4 text-slate-400" />
+            <CardTitle className="text-sm font-medium text-slate-500">Categories Active</CardTitle>
+            <LayoutGrid className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-900">{summary?.byCategory?.length || 0}</div>

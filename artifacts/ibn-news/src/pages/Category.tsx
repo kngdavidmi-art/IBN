@@ -1,7 +1,6 @@
 import { useParams } from "wouter";
 import { useListArticles } from "@workspace/api-client-react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { PageShell } from "@/components/layout/PageShell";
 import { ArticleCard } from "@/components/ui/ArticleCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,9 +12,7 @@ export default function Category() {
   const { data: articles, isLoading } = useListArticles({ category: displayTitle });
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
+    <PageShell>
       <main className="flex-1">
         <div className="bg-muted py-12 mb-12">
           <div className="container mx-auto px-4">
@@ -53,8 +50,6 @@ export default function Category() {
           )}
         </div>
       </main>
-
-      <Footer />
-    </div>
+    </PageShell>
   );
 }

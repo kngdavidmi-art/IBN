@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -40,6 +41,16 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    if (!document.querySelector('link[type="application/rss+xml"]')) {
+      const link = document.createElement('link');
+      link.rel = 'alternate';
+      link.type = 'application/rss+xml';
+      link.href = '/api/rss';
+      document.head.appendChild(link);
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

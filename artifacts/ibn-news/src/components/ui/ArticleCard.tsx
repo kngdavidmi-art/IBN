@@ -1,6 +1,8 @@
 import { Link } from "wouter";
 import { format } from "date-fns";
 import type { Article } from "@workspace/api-client-react";
+import { readingTime } from "@/lib/readingTime";
+import { relativeTime } from "@/lib/relativeTime";
 
 interface ArticleCardProps {
   article: Article;
@@ -54,7 +56,15 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
           <div className="mt-auto pt-2 flex items-center text-xs text-muted-foreground font-medium uppercase tracking-wide">
             <span>{article.author}</span>
             <span className="mx-2">•</span>
-            <span>{format(new Date(article.publishedAt), 'MMM d, yyyy')}</span>
+            <span>
+              {(() => {
+                const pubDate = new Date(article.publishedAt);
+                const isRecent = Date.now() - pubDate.getTime() < 7 * 24 * 60 * 60 * 1000;
+                return isRecent ? relativeTime(pubDate) : format(pubDate, 'MMM d, yyyy');
+              })()}
+            </span>
+            <span className="mx-2">•</span>
+            <span>{readingTime(article.content)}</span>
           </div>
         </div>
       </div>
