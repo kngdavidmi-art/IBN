@@ -81,6 +81,7 @@ export interface LoginInput {
 export interface SignUpInput {
   /** @minLength 3 */
   username: string;
+  email: string;
   /** @minLength 6 */
   password: string;
 }
@@ -98,40 +99,25 @@ export interface AuthResponse {
 export interface EditorUser {
   id: number;
   username: string;
+  /** @nullable */
+  email?: string | null;
   role: string;
   /** @nullable */
   lastLoginAt?: string | null;
   createdAt: string;
 }
 
-export type CreateEditorInputRole = typeof CreateEditorInputRole[keyof typeof CreateEditorInputRole];
-
-
-export const CreateEditorInputRole = {
-  admin: 'admin',
-  editor: 'editor',
-} as const;
-
 export interface CreateEditorInput {
   /** @minLength 3 */
   username: string;
+  email: string;
   /** @minLength 6 */
   password: string;
-  role: CreateEditorInputRole;
 }
-
-export type UpdateEditorInputRole = typeof UpdateEditorInputRole[keyof typeof UpdateEditorInputRole];
-
-
-export const UpdateEditorInputRole = {
-  admin: 'admin',
-  editor: 'editor',
-} as const;
 
 export interface UpdateEditorInput {
   /** @minLength 6 */
   password?: string;
-  role?: UpdateEditorInputRole;
 }
 
 export type EngagementStatsTopArticlesItem = {

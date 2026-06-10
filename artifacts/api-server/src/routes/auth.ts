@@ -4,6 +4,7 @@ import { adminsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import type express from "express";
+import { isApprovedAdminEmail } from "../adminEmails";
 
 const router = Router();
 
@@ -52,7 +53,14 @@ router.post("/auth/login", async (req, res) => {
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
-  // Track last login
+
+  // Re-evaluate role on login in case email approval changed
+  const correctRole = isApprovedAdminEmail(admin.email) ? "admin" : "editor";
+  if (admin.role !== correctRole) {
+    await db.update(adminsTable).set({ role: correctRole }).where(eq(adminsTable.id, admin.id));
+    admin.role = correctRole;
+  }
+
   await db.update(adminsTable).set({ lastLoginAt: new Date() }).where(eq(adminsTable.id, admin.id));
 
   const token = signToken(admin.id, admin.username, admin.role);
@@ -76,9 +84,9 @@ router.get("/auth/me", requireAuth, (req, res) => {
 });
 
 router.post("/auth/signup", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    res.status(400).json({ error: "Username and password required" });
+  const { username, email, password } = req.body;
+  if (!username || !password || !email) {
+    res.status(400).json({ error: "Username, email and password are required" });
     return;
   }
   if (username.length < 3) {
@@ -89,6 +97,8 @@ router.post("/auth/signup", async (req, res) => {
     res.status(400).json({ error: "Password must be at least 6 characters" });
     return;
   }
+  const normalizedEmail = email.toLowerCase().trim();
+
   const existing = await db
     .select({ id: adminsTable.id })
     .from(adminsTable)
@@ -98,9 +108,23 @@ router.post("/auth/signup", async (req, res) => {
     res.status(409).json({ error: "Username already taken" });
     return;
   }
+
+  const existingEmail = await db
+    .select({ id: adminsTable.id })
+    .from(adminsTable)
+    .where(eq(adminsTable.email, normalizedEmail))
+    .limit(1);
+  if (existingEmail.length > 0) {
+    res.status(409).json({ error: "An account with this email already exists" });
+    return;
+  }
+
+  // Only the two approved emails get admin role — everyone else is editor
+  const role = isApprovedAdminEmail(normalizedEmail) ? "admin" : "editor";
+
   const [created] = await db
     .insert(adminsTable)
-    .values({ username, passwordHash: hashPassword(password), role: "editor" })
+    .values({ username, email: normalizedEmail, passwordHash: hashPassword(password), role })
     .returning({ id: adminsTable.id, username: adminsTable.username, role: adminsTable.role });
   res.status(201).json(created);
 });

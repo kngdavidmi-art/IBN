@@ -5,10 +5,8 @@
  * IBN News Portal API
  * OpenAPI spec version: 0.1.0
  */
-import type { UpdateEditorInputRole } from './updateEditorInputRole';
 
 export interface UpdateEditorInput {
   /** @minLength 6 */
   password?: string;
-  role?: UpdateEditorInputRole;
 }

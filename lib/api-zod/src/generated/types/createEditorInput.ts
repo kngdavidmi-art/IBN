@@ -5,12 +5,11 @@
  * IBN News Portal API
  * OpenAPI spec version: 0.1.0
  */
-import type { CreateEditorInputRole } from './createEditorInputRole';
 
 export interface CreateEditorInput {
   /** @minLength 3 */
   username: string;
+  email: string;
   /** @minLength 6 */
   password: string;
-  role: CreateEditorInputRole;
 }

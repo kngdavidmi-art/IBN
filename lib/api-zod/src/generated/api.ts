@@ -172,6 +172,7 @@ export const signUpBodyPasswordMin = 6;
 
 export const SignUpBody = zod.object({
   "username": zod.string().min(signUpBodyUsernameMin),
+  "email": zod.string().email(),
   "password": zod.string().min(signUpBodyPasswordMin)
 })
 
@@ -291,6 +292,7 @@ export const DeleteArticleParams = zod.object({
 export const ListEditorsResponseItem = zod.object({
   "id": zod.number(),
   "username": zod.string(),
+  "email": zod.string().nullish(),
   "role": zod.string(),
   "lastLoginAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
@@ -309,8 +311,8 @@ export const createEditorBodyPasswordMin = 6;
 
 export const CreateEditorBody = zod.object({
   "username": zod.string().min(createEditorBodyUsernameMin),
-  "password": zod.string().min(createEditorBodyPasswordMin),
-  "role": zod.enum(['admin', 'editor'])
+  "email": zod.string().email(),
+  "password": zod.string().min(createEditorBodyPasswordMin)
 })
 
 
@@ -326,13 +328,13 @@ export const updateEditorBodyPasswordMin = 6;
 
 
 export const UpdateEditorBody = zod.object({
-  "password": zod.string().min(updateEditorBodyPasswordMin).optional(),
-  "role": zod.enum(['admin', 'editor']).optional()
+  "password": zod.string().min(updateEditorBodyPasswordMin).optional()
 })
 
 export const UpdateEditorResponse = zod.object({
   "id": zod.number(),
   "username": zod.string(),
+  "email": zod.string().nullish(),
   "role": zod.string(),
   "lastLoginAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()

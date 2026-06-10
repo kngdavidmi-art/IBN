@@ -527,11 +527,14 @@ components:
 
     SignUpInput:
       type: object
-      required: [username, password]
+      required: [username, email, password]
       properties:
         username:
           type: string
           minLength: 3
+        email:
+          type: string
+          format: email
         password:
           type: string
           minLength: 6
@@ -562,6 +565,8 @@ components:
           type: integer
         username:
           type: string
+        email:
+          type: ["string", "null"]
         role:
           type: string
         lastLoginAt:
@@ -573,17 +578,17 @@ components:
 
     CreateEditorInput:
       type: object
-      required: [username, password, role]
+      required: [username, email, password]
       properties:
         username:
           type: string
           minLength: 3
+        email:
+          type: string
+          format: email
         password:
           type: string
           minLength: 6
-        role:
-          type: string
-          enum: [admin, editor]
 
     UpdateEditorInput:
       type: object
@@ -591,9 +596,6 @@ components:
         password:
           type: string
           minLength: 6
-        role:
-          type: string
-          enum: [admin, editor]
 
     EngagementStats:
       type: object

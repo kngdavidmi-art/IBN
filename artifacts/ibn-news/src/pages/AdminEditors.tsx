@@ -7,19 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Edit, Trash2, Loader2, Users } from "lucide-react";
+import { Edit, Trash2, Loader2, Users, ShieldCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
+const APPROVED_ADMIN_EMAILS = ["kngdavidmi@gmail.com", "blessingta2020@gmail.com"];
+
 const createEditorSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["admin", "editor"])
 });
 
 type CreateEditorForm = z.infer<typeof createEditorSchema>;
@@ -32,14 +33,13 @@ export default function AdminEditors() {
   const deleteEditorMutation = useDeleteEditor();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editPassword, setEditPassword] = useState("");
-  const [editRole, setEditRole] = useState<"admin" | "editor">("editor");
 
-  const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<CreateEditorForm>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CreateEditorForm>({
     resolver: zodResolver(createEditorSchema),
-    defaultValues: { username: "", password: "", role: "editor" }
+    defaultValues: { username: "", email: "", password: "" }
   });
 
   if (user?.role !== "admin") {
@@ -57,37 +57,39 @@ export default function AdminEditors() {
   }
 
   const onSubmit = async (data: CreateEditorForm) => {
-    createEditorMutation.mutate({ data }, {
-      onSuccess: () => {
-        toast({ title: "Team member added" });
+    createEditorMutation.mutate({ data: { username: data.username, email: data.email, password: data.password } }, {
+      onSuccess: (created) => {
+        const roleLabel = (created as any).role === "admin" ? "Administrator" : "Editor";
+        toast({ title: "Team member added", description: `${data.username} joined as ${roleLabel}.` });
         reset();
         queryClient.invalidateQueries({ queryKey: getListEditorsQueryKey() });
       },
       onError: (err: any) => {
-        toast({ title: "Failed to add team member", description: err.message, variant: "destructive" });
+        const msg = err?.response?.data?.error || err?.message || "Failed to add team member";
+        toast({ title: "Failed to add", description: msg, variant: "destructive" });
       }
     });
   };
 
   const handleEditClick = (editor: any) => {
     setEditingId(editor.id);
-    setEditRole(editor.role);
     setEditPassword("");
   };
 
   const handleUpdate = async (id: number) => {
-    const data: any = {};
-    if (editPassword) data.password = editPassword;
-    if (editRole) data.role = editRole;
-
-    updateEditorMutation.mutate({ id, data }, {
+    if (!editPassword) {
+      toast({ title: "Enter a new password", variant: "destructive" });
+      return;
+    }
+    updateEditorMutation.mutate({ id, data: { password: editPassword } }, {
       onSuccess: () => {
-        toast({ title: "Editor updated" });
+        toast({ title: "Password updated" });
         setEditingId(null);
         queryClient.invalidateQueries({ queryKey: getListEditorsQueryKey() });
       },
       onError: (err: any) => {
-        toast({ title: "Update failed", description: err.message, variant: "destructive" });
+        const msg = err?.response?.data?.error || err?.message || "Update failed";
+        toast({ title: "Update failed", description: msg, variant: "destructive" });
       }
     });
   };
@@ -96,11 +98,12 @@ export default function AdminEditors() {
     if (window.confirm(`Remove ${editor.username} from the team?`)) {
       deleteEditorMutation.mutate({ id: editor.id }, {
         onSuccess: () => {
-          toast({ title: "Editor removed" });
+          toast({ title: "Team member removed" });
           queryClient.invalidateQueries({ queryKey: getListEditorsQueryKey() });
         },
         onError: (err: any) => {
-          toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+          const msg = err?.response?.data?.error || err?.message || "Delete failed";
+          toast({ title: "Delete failed", description: msg, variant: "destructive" });
         }
       });
     }
@@ -108,10 +111,17 @@ export default function AdminEditors() {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold font-serif text-slate-900">Manage Team</h1>
-          <p className="text-slate-500 mt-1">Add, update, or remove editorial staff.</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold font-serif text-slate-900">Manage Team</h1>
+        <p className="text-slate-500 mt-1">Add, update, or remove editorial staff.</p>
+      </div>
+
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+        <ShieldCheck className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+        <div className="text-sm text-blue-800">
+          <span className="font-semibold">Admin rights are email-controlled.</span>{" "}
+          Only <code className="bg-blue-100 px-1 rounded">kngdavidmi@gmail.com</code> and{" "}
+          <code className="bg-blue-100 px-1 rounded">blessingta2020@gmail.com</code> receive administrator privileges. All other accounts are created as editors.
         </div>
       </div>
 
@@ -124,15 +134,17 @@ export default function AdminEditors() {
 
           <Card className="border border-slate-200">
             {isLoading ? (
-              <div className="p-8 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+              <div className="p-8 flex justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
             ) : (
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead>Username</TableHead>
+                    <TableHead>Member</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Last Login</TableHead>
-                    <TableHead>Member Since</TableHead>
+                    <TableHead>Joined</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -141,33 +153,27 @@ export default function AdminEditors() {
                     <TableRow key={editor.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                          <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">
                             {editor.username.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-semibold">{editor.username}</span>
+                          <div>
+                            <p className="font-semibold leading-tight">{editor.username}</p>
+                            {editor.email && (
+                              <p className="text-xs text-slate-400 leading-tight mt-0.5">{editor.email}</p>
+                            )}
+                          </div>
                         </div>
                         {editingId === editor.id && (
-                          <div className="mt-4 p-4 border rounded-md bg-slate-50 flex flex-col gap-4">
-                            <div className="space-y-2">
-                              <Label>New Password (Optional)</Label>
-                              <Input 
-                                type="password" 
-                                placeholder="••••••••" 
-                                value={editPassword} 
-                                onChange={(e) => setEditPassword(e.target.value)} 
+                          <div className="mt-4 p-4 border rounded-md bg-slate-50 flex flex-col gap-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">New Password</Label>
+                              <Input
+                                type="password"
+                                placeholder="••••••••"
+                                value={editPassword}
+                                onChange={(e) => setEditPassword(e.target.value)}
+                                autoComplete="new-password"
                               />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Role</Label>
-                              <Select value={editRole} onValueChange={(val: any) => setEditRole(val)}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="editor">Editor</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
                             </div>
                             <div className="flex justify-end gap-2">
                               <Button variant="outline" size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
@@ -179,29 +185,31 @@ export default function AdminEditors() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {editor.role === 'admin' ? (
-                          <Badge className="bg-primary text-white">Admin</Badge>
+                        {editor.role === "admin" ? (
+                          <Badge className="bg-primary text-white gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Admin
+                          </Badge>
                         ) : (
                           <Badge variant="outline">Editor</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-slate-500">
-                        {editor.lastLoginAt ? format(new Date(editor.lastLoginAt), 'MMM d, yyyy') : "Never"}
+                      <TableCell className="text-slate-500 text-sm">
+                        {editor.lastLoginAt ? format(new Date(editor.lastLoginAt), "MMM d, yyyy") : "Never"}
                       </TableCell>
-                      <TableCell className="text-slate-500">
-                        {format(new Date(editor.createdAt), 'MMM d, yyyy')}
+                      <TableCell className="text-slate-500 text-sm">
+                        {format(new Date(editor.createdAt), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(editor)} className="text-slate-500 hover:text-primary">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditClick(editor)} className="text-slate-400 hover:text-primary">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDelete(editor)} 
-                            disabled={user?.id === editor.id} 
-                            className="text-slate-500 hover:text-destructive"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(editor)}
+                            disabled={user?.id === editor.id}
+                            className="text-slate-400 hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -211,7 +219,7 @@ export default function AdminEditors() {
                   ))}
                   {editors?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">No team members found.</TableCell>
+                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">No team members yet.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -226,50 +234,50 @@ export default function AdminEditors() {
               <CardTitle className="text-lg">Add Team Member</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
+              <p className="text-xs text-slate-500 mb-4">
+                Role is assigned automatically based on email address.
+              </p>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label htmlFor="new-username">Username</Label>
-                  <Input 
-                    id="new-username" 
-                    placeholder="johndoe" 
-                    {...register("username")} 
+                  <Input
+                    id="new-username"
+                    placeholder="johndoe"
+                    autoComplete="off"
+                    {...register("username")}
                     className={errors.username ? "border-destructive" : ""}
                   />
-                  {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
+                  {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
                 </div>
-                
-                <div className="space-y-2">
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-email">Email Address</Label>
+                  <Input
+                    id="new-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    autoComplete="off"
+                    {...register("email")}
+                    className={errors.email ? "border-destructive" : ""}
+                  />
+                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                  {/* Hint if they type an admin email */}
+                </div>
+
+                <div className="space-y-1.5">
                   <Label htmlFor="new-password">Password</Label>
-                  <Input 
-                    id="new-password" 
+                  <Input
+                    id="new-password"
                     type="password"
-                    placeholder="••••••••" 
-                    {...register("password")} 
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                    {...register("password")}
                     className={errors.password ? "border-destructive" : ""}
                   />
-                  {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+                  {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="new-role">Role</Label>
-                  <Controller
-                    control={control}
-                    name="role"
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="editor">Editor</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-
-                <Button type="submit" className="w-full mt-4" disabled={isSubmitting || createEditorMutation.isPending}>
+                <Button type="submit" className="w-full mt-2" disabled={isSubmitting || createEditorMutation.isPending}>
                   {isSubmitting || createEditorMutation.isPending ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...</>
                   ) : (
@@ -277,6 +285,21 @@ export default function AdminEditors() {
                   )}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-200 mt-4 bg-slate-50">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start gap-2 text-sm text-slate-600">
+                <ShieldCheck className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium text-slate-800 mb-1">Approved Admin Emails</p>
+                  {APPROVED_ADMIN_EMAILS.map((email) => (
+                    <p key={email} className="text-xs font-mono text-slate-500">{email}</p>
+                  ))}
+                  <p className="text-xs text-slate-400 mt-2">Accounts registered with these emails automatically receive full administrator privileges.</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

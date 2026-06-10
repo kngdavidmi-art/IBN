@@ -9,6 +9,8 @@
 export interface EditorUser {
   id: number;
   username: string;
+  /** @nullable */
+  email?: string | null;
   role: string;
   /** @nullable */
   lastLoginAt?: Date | null;

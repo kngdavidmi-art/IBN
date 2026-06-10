@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 
 const signUpSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -25,13 +26,13 @@ type SignUpForm = z.infer<typeof signUpSchema>;
 export default function SignUp() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const { data: user, isLoading: isCheckingAuth } = useGetMe({ query: { retry: false } });
   const signUpMutation = useSignUp();
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { username: "", password: "", confirmPassword: "" }
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" }
   });
 
   useEffect(() => {
@@ -41,24 +42,17 @@ export default function SignUp() {
   }, [user, isCheckingAuth, setLocation]);
 
   const onSubmit = async (data: SignUpForm) => {
-    signUpMutation.mutate({ data: { username: data.username, password: data.password } }, {
+    signUpMutation.mutate({ data: { username: data.username, email: data.email, password: data.password } }, {
       onSuccess: () => {
-        toast({ title: "Account created! Please wait for admin approval." });
+        toast({ title: "Account created!", description: "You can now sign in with your credentials." });
         setLocation("/login");
       },
       onError: (error: any) => {
-        if (error?.status === 409) {
-          toast({ 
-            title: "Sign up failed", 
-            description: "Username already taken",
-            variant: "destructive"
-          });
+        const msg = error?.response?.data?.error || error?.message || "An error occurred.";
+        if (error?.response?.status === 409) {
+          toast({ title: "Sign up failed", description: msg, variant: "destructive" });
         } else {
-          toast({ 
-            title: "Sign up failed", 
-            description: error?.message || "An error occurred during sign up.",
-            variant: "destructive"
-          });
+          toast({ title: "Sign up failed", description: msg, variant: "destructive" });
         }
       }
     });
@@ -81,29 +75,44 @@ export default function SignUp() {
           </div>
           <CardTitle className="text-2xl font-serif">Request Editor Access</CardTitle>
           <CardDescription>
-            Register a new editor account
+            Register a new editorial account
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input 
-                id="username" 
-                placeholder="editor" 
-                {...register("username")} 
+              <Input
+                id="username"
+                placeholder="johndoe"
+                autoComplete="username"
+                {...register("username")}
                 className={errors.username ? "border-destructive" : ""}
               />
               {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
             </div>
-            
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                {...register("email")}
+                className={errors.email ? "border-destructive" : ""}
+              />
+              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
+              <Input
+                id="password"
                 type="password"
-                placeholder="••••••••" 
-                {...register("password")} 
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("password")}
                 className={errors.password ? "border-destructive" : ""}
               />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
@@ -111,11 +120,12 @@ export default function SignUp() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input 
-                id="confirmPassword" 
+              <Input
+                id="confirmPassword"
                 type="password"
-                placeholder="••••••••" 
-                {...register("confirmPassword")} 
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("confirmPassword")}
                 className={errors.confirmPassword ? "border-destructive" : ""}
               />
               {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
@@ -132,7 +142,7 @@ export default function SignUp() {
         </CardContent>
         <CardFooter className="flex flex-col justify-center text-sm text-muted-foreground pt-4 border-t">
           <p>© {new Date().getFullYear()} IBN News Network. Secure System.</p>
-          <div className="text-center mt-4 text-sm text-muted-foreground">
+          <div className="text-center mt-4">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
               Sign in
