@@ -5,6 +5,7 @@
  * IBN News Portal API
  * OpenAPI spec version: 0.1.0
  */
+import type { ArticleStatus } from './articleStatus';
 
 export interface Article {
   id: number;
@@ -21,6 +22,7 @@ export interface Article {
   isFeatured: boolean;
   isBreaking: boolean;
   viewCount: number;
+  status: ArticleStatus;
   publishedAt: Date;
   createdAt?: Date;
 }

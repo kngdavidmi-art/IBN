@@ -9,6 +9,15 @@ export interface HealthStatus {
   status: string;
 }
 
+export type ArticleStatus = typeof ArticleStatus[keyof typeof ArticleStatus];
+
+
+export const ArticleStatus = {
+  draft: 'draft',
+  pending_review: 'pending_review',
+  published: 'published',
+} as const;
+
 export interface Article {
   id: number;
   title: string;
@@ -24,6 +33,7 @@ export interface Article {
   isFeatured: boolean;
   isBreaking: boolean;
   viewCount: number;
+  status: ArticleStatus;
   publishedAt: string;
   createdAt?: string;
 }
@@ -151,5 +161,9 @@ q?: string;
 category?: string;
 limit?: number;
 offset?: number;
+};
+
+export type GetPendingCount200 = {
+  count: number;
 };
 

@@ -54,11 +54,14 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
-  // Re-evaluate role on login in case email approval changed
-  const correctRole = isApprovedAdminEmail(admin.email) ? "admin" : "editor";
-  if (admin.role !== correctRole) {
-    await db.update(adminsTable).set({ role: correctRole }).where(eq(adminsTable.id, admin.id));
-    admin.role = correctRole;
+  // Re-evaluate role only for accounts that have an email set
+  // Accounts with no email retain their existing DB role
+  if (admin.email) {
+    const correctRole = isApprovedAdminEmail(admin.email) ? "admin" : "editor";
+    if (admin.role !== correctRole) {
+      await db.update(adminsTable).set({ role: correctRole }).where(eq(adminsTable.id, admin.id));
+      admin.role = correctRole;
+    }
   }
 
   await db.update(adminsTable).set({ lastLoginAt: new Date() }).where(eq(adminsTable.id, admin.id));

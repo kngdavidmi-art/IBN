@@ -1,13 +1,15 @@
-import { useGetArticlesSummary } from "@workspace/api-client-react";
+import { useGetArticlesSummary, useGetMe, useGetPendingCount } from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Zap, Star, LayoutGrid } from "lucide-react";
+import { BookOpen, Zap, Star, LayoutGrid, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
 export default function AdminDashboard() {
   const { data: summary, isLoading } = useGetArticlesSummary();
+  const { data: user } = useGetMe();
+  const { data: pendingData } = useGetPendingCount();
 
   if (isLoading) {
     return (
@@ -37,7 +39,7 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
         <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Total Articles</CardTitle>
@@ -81,7 +83,41 @@ export default function AdminDashboard() {
             <p className="text-xs text-slate-500 mt-1">Active content sections</p>
           </CardContent>
         </Card>
+
+        {user?.role === "admin" && (
+          <Card className="shadow-sm border border-amber-200 bg-amber-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-amber-700">Pending Review</CardTitle>
+              <Clock className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-amber-700">{pendingData?.count || 0}</div>
+              <p className="text-xs text-amber-600 mt-1">
+                {pendingData?.count ? (
+                  <Link href="/admin/posts" className="hover:underline font-medium">
+                    Review now →
+                  </Link>
+                ) : "No articles awaiting review"}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {pendingData?.count ? pendingData.count > 0 && user?.role === "admin" && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <p className="font-semibold text-amber-800">{pendingData.count} article{pendingData.count !== 1 ? "s" : ""} waiting for your approval</p>
+              <p className="text-sm text-amber-600">Review and publish them from the Posts page.</p>
+            </div>
+          </div>
+          <Button asChild size="sm" variant="outline" className="border-amber-400 text-amber-700 hover:bg-amber-100 shrink-0">
+            <Link href="/admin/posts">Review Posts</Link>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="col-span-1">

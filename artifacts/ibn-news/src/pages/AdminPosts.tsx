@@ -1,5 +1,14 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminListArticles, useDeleteArticle, getAdminListArticlesQueryKey } from "@workspace/api-client-react";
+import { 
+  useAdminListArticles, 
+  useDeleteArticle, 
+  getAdminListArticlesQueryKey,
+  useGetMe,
+  useSubmitArticleForReview,
+  usePublishArticle,
+  useUnpublishArticle,
+  getGetPendingCountQueryKey
+} from "@workspace/api-client-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -21,9 +30,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
+function StatusBadge({ status }: { status: string }) {
+  if (status === "published") return <Badge className="bg-green-600 text-white text-[10px] rounded-sm uppercase tracking-wider">Published</Badge>;
+  if (status === "pending_review") return <Badge className="bg-amber-500 text-white text-[10px] rounded-sm uppercase tracking-wider">Pending Review</Badge>;
+  return <Badge variant="outline" className="text-[10px] rounded-sm uppercase tracking-wider text-slate-500">Draft</Badge>;
+}
+
 export default function AdminPosts() {
   const { data: articles, isLoading } = useAdminListArticles();
+  const { data: currentUser } = useGetMe();
   const deleteMutation = useDeleteArticle();
+  const submitMutation = useSubmitArticleForReview();
+  const publishMutation = usePublishArticle();
+  const unpublishMutation = useUnpublishArticle();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -32,10 +51,32 @@ export default function AdminPosts() {
       onSuccess: () => {
         toast({ title: "Article deleted" });
         queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() });
       },
-      onError: (err) => {
+      onError: (err: any) => {
         toast({ title: "Failed to delete", description: err.message, variant: "destructive" });
       }
+    });
+  };
+
+  const handleSubmit = (id: number) => {
+    submitMutation.mutate({ id }, {
+      onSuccess: () => { toast({ title: "Submitted for review" }); queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() }); queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() }); },
+      onError: (err: any) => { toast({ title: "Failed", description: err.message, variant: "destructive" }); }
+    });
+  };
+
+  const handlePublish = (id: number) => {
+    publishMutation.mutate({ id }, {
+      onSuccess: () => { toast({ title: "Article published!" }); queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() }); queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() }); },
+      onError: (err: any) => { toast({ title: "Failed", description: err.message, variant: "destructive" }); }
+    });
+  };
+
+  const handleUnpublish = (id: number) => {
+    unpublishMutation.mutate({ id }, {
+      onSuccess: () => { toast({ title: "Article unpublished" }); queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() }); queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() }); },
+      onError: (err: any) => { toast({ title: "Failed", description: err.message, variant: "destructive" }); }
     });
   };
 
@@ -96,23 +137,62 @@ export default function AdminPosts() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {article.isBreaking && (
-                          <Badge className="bg-primary text-white text-[10px] rounded-sm uppercase tracking-wider">Breaking</Badge>
-                        )}
-                        {article.isFeatured && (
-                          <Badge variant="secondary" className="text-[10px] rounded-sm uppercase tracking-wider bg-amber-100 text-amber-800 hover:bg-amber-100">Featured</Badge>
-                        )}
-                        {!article.isBreaking && !article.isFeatured && (
-                          <span className="text-xs text-slate-500">Standard</span>
-                        )}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex gap-1 flex-wrap">
+                          <StatusBadge status={article.status} />
+                        </div>
+                        <div className="flex gap-1 flex-wrap">
+                          {article.isBreaking && (
+                            <Badge className="bg-primary text-white text-[10px] rounded-sm uppercase tracking-wider">Breaking</Badge>
+                          )}
+                          {article.isFeatured && (
+                            <Badge variant="secondary" className="text-[10px] rounded-sm uppercase tracking-wider bg-amber-100 text-amber-800 hover:bg-amber-100">Featured</Badge>
+                          )}
+                          {!article.isBreaking && !article.isFeatured && (
+                            <span className="text-xs text-slate-500">Standard</span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-600">
                       {format(new Date(article.publishedAt), 'MMM d, yyyy')}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 items-center">
+                        {currentUser?.role !== "admin" ? (
+                          <>
+                            {article.status === "draft" && (
+                              <Button variant="outline" size="sm" className="text-xs h-7 px-2 text-amber-700 border-amber-300 hover:bg-amber-50"
+                                onClick={() => handleSubmit(article.id)} disabled={submitMutation.isPending}>
+                                Submit
+                              </Button>
+                            )}
+                            {article.status === "pending_review" && (
+                              <Badge variant="outline" className="text-[10px] rounded-sm uppercase tracking-wider text-amber-500 border-amber-200">Submitted</Badge>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {article.status === "pending_review" && (
+                              <Button variant="outline" size="sm" className="text-xs h-7 px-2 text-green-700 border-green-300 hover:bg-green-50"
+                                onClick={() => handlePublish(article.id)} disabled={publishMutation.isPending}>
+                                Publish
+                              </Button>
+                            )}
+                            {article.status === "published" && (
+                              <Button variant="outline" size="sm" className="text-xs h-7 px-2 text-slate-600 border-slate-300 hover:bg-slate-50"
+                                onClick={() => handleUnpublish(article.id)} disabled={unpublishMutation.isPending}>
+                                Unpublish
+                              </Button>
+                            )}
+                            {article.status === "draft" && (
+                              <Button variant="outline" size="sm" className="text-xs h-7 px-2 text-green-700 border-green-300 hover:bg-green-50"
+                                onClick={() => handlePublish(article.id)} disabled={publishMutation.isPending}>
+                                Publish
+                              </Button>
+                            )}
+                          </>
+                        )}
                         <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-primary">
                           <a href={`/news/${article.id}`} target="_blank" rel="noopener noreferrer" title="View live">
                             <ExternalLink className="h-4 w-4" />

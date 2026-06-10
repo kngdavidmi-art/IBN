@@ -37,6 +37,7 @@ export const ListArticlesResponseItem = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -66,6 +67,7 @@ export const SearchArticlesResponse = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })),
@@ -90,6 +92,7 @@ export const GetFeaturedArticlesResponseItem = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -129,6 +132,7 @@ export const GetArticleResponse = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -192,6 +196,7 @@ export const AdminListArticlesResponseItem = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -237,6 +242,7 @@ export const AdminGetArticleResponse = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -273,6 +279,7 @@ export const UpdateArticleResponse = zod.object({
   "isFeatured": zod.boolean(),
   "isBreaking": zod.boolean(),
   "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
 })
@@ -283,6 +290,89 @@ export const UpdateArticleResponse = zod.object({
  */
 export const DeleteArticleParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get count of articles pending review
+ */
+export const GetPendingCountResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Submit article for admin review
+ */
+export const SubmitArticleForReviewParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const SubmitArticleForReviewResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "author": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "isFeatured": zod.boolean(),
+  "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
+  "publishedAt": zod.coerce.date(),
+  "createdAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Publish an article (admin only)
+ */
+export const PublishArticleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const PublishArticleResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "author": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "isFeatured": zod.boolean(),
+  "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
+  "publishedAt": zod.coerce.date(),
+  "createdAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Unpublish / send back to draft (admin only)
+ */
+export const UnpublishArticleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnpublishArticleResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "author": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "isFeatured": zod.boolean(),
+  "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
+  "publishedAt": zod.coerce.date(),
+  "createdAt": zod.coerce.date().optional()
 })
 
 

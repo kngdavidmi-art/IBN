@@ -4,15 +4,16 @@ import { eq, desc, and, sql } from "drizzle-orm";
 
 const router = Router();
 
+// Public routes — only return published articles
 router.get("/articles", async (req, res) => {
   const { category, limit = "20", offset = "0" } = req.query as Record<string, string>;
-  const conditions = [];
+  const conditions = [eq(articlesTable.status, "published")];
   if (category) conditions.push(eq(articlesTable.category, category));
 
   const rows = await db
     .select()
     .from(articlesTable)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(articlesTable.publishedAt))
     .limit(Number(limit))
     .offset(Number(offset));
@@ -24,14 +25,17 @@ router.get("/articles/featured", async (_req, res) => {
   const rows = await db
     .select()
     .from(articlesTable)
-    .where(eq(articlesTable.isFeatured, true))
+    .where(and(eq(articlesTable.isFeatured, true), eq(articlesTable.status, "published")))
     .orderBy(desc(articlesTable.publishedAt))
     .limit(5);
   res.json(rows);
 });
 
 router.get("/articles/summary", async (_req, res) => {
-  const all = await db.select().from(articlesTable);
+  const all = await db
+    .select()
+    .from(articlesTable)
+    .where(eq(articlesTable.status, "published"));
   const byCategory: Record<string, number> = {};
   let breaking = 0;
   let featured = 0;
@@ -50,7 +54,11 @@ router.get("/articles/summary", async (_req, res) => {
 
 router.get("/articles/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const [article] = await db.select().from(articlesTable).where(eq(articlesTable.id, id)).limit(1);
+  const [article] = await db
+    .select()
+    .from(articlesTable)
+    .where(and(eq(articlesTable.id, id), eq(articlesTable.status, "published")))
+    .limit(1);
   if (!article) {
     res.status(404).json({ error: "Not found" });
     return;

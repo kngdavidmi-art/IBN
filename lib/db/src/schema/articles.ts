@@ -14,6 +14,7 @@ export const articlesTable = pgTable("articles", {
   isFeatured: boolean("is_featured").notNull().default(false),
   isBreaking: boolean("is_breaking").notNull().default(false),
   viewCount: integer("view_count").notNull().default(0),
+  status: text("status").notNull().default("published"),
   publishedAt: timestamp("published_at").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -3,7 +3,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetArticle, useCreateArticle, useUpdateArticle, getAdminGetArticleQueryKey, getAdminListArticlesQueryKey } from "@workspace/api-client-react";
+import { 
+  useAdminGetArticle, 
+  useCreateArticle, 
+  useUpdateArticle, 
+  getAdminGetArticleQueryKey, 
+  getAdminListArticlesQueryKey,
+  useGetMe,
+  useSubmitArticleForReview,
+  usePublishArticle,
+  getGetPendingCountQueryKey
+} from "@workspace/api-client-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Send, Globe } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const categories = ["World", "Tech", "Business", "Sports", "Entertainment", "Science", "Videos"];
@@ -47,6 +57,9 @@ export default function AdminPostForm() {
     }
   });
 
+  const { data: currentUser } = useGetMe();
+  const submitMutation = useSubmitArticleForReview();
+  const publishMutation = usePublishArticle();
   const createMutation = useCreateArticle();
   const updateMutation = useUpdateArticle();
 
@@ -250,17 +263,81 @@ export default function AdminPostForm() {
             </div>
           </div>
 
-          <div className="pt-6 border-t flex justify-end gap-4">
-            <Button type="button" variant="outline" asChild>
-              <Link href="/admin/posts">Cancel</Link>
-            </Button>
-            <Button type="submit" disabled={isSaving} className="bg-slate-900 hover:bg-slate-800">
-              {isSaving ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
-              ) : (
-                <><Save className="mr-2 h-4 w-4" /> Save Article</>
+          <div className="pt-6 border-t flex flex-wrap justify-between items-center gap-4">
+            {/* Left: status indicator when editing */}
+            {isEditing && existingArticle && (
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                Current status:{" "}
+                {existingArticle.status === "published" && <span className="font-medium text-green-600">Published</span>}
+                {existingArticle.status === "pending_review" && <span className="font-medium text-amber-600">Pending Review</span>}
+                {existingArticle.status === "draft" && <span className="font-medium text-slate-500">Draft</span>}
+              </div>
+            )}
+            {!isEditing && <div />}
+
+            {/* Right: action buttons */}
+            <div className="flex gap-3 ml-auto">
+              <Button type="button" variant="outline" asChild>
+                <Link href="/admin/posts">Cancel</Link>
+              </Button>
+
+              {/* Save Draft — always available */}
+              <Button type="submit" variant="outline" disabled={isSaving} className="border-slate-300">
+                {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : <><Save className="mr-2 h-4 w-4" /> Save Draft</>}
+              </Button>
+
+              {/* Submit for Review — editor only, only when draft */}
+              {isEditing && currentUser?.role !== "admin" && existingArticle?.status === "draft" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-amber-400 text-amber-700 hover:bg-amber-50"
+                  disabled={submitMutation.isPending}
+                  onClick={() => {
+                    submitMutation.mutate({ id: articleId }, {
+                      onSuccess: () => {
+                        toast({ title: "Submitted for review!" });
+                        queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() });
+                        queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() });
+                        setLocation("/admin/posts");
+                      },
+                      onError: (err: any) => toast({ title: "Failed to submit", description: err.message, variant: "destructive" })
+                    });
+                  }}
+                >
+                  {submitMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : <><Send className="mr-2 h-4 w-4" /> Submit for Review</>}
+                </Button>
               )}
-            </Button>
+
+              {/* Publish — admin only */}
+              {currentUser?.role === "admin" && isEditing && existingArticle?.status !== "published" && (
+                <Button
+                  type="button"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  disabled={publishMutation.isPending}
+                  onClick={() => {
+                    publishMutation.mutate({ id: articleId }, {
+                      onSuccess: () => {
+                        toast({ title: "Article published!" });
+                        queryClient.invalidateQueries({ queryKey: getAdminListArticlesQueryKey() });
+                        queryClient.invalidateQueries({ queryKey: getGetPendingCountQueryKey() });
+                        setLocation("/admin/posts");
+                      },
+                      onError: (err: any) => toast({ title: "Failed to publish", description: err.message, variant: "destructive" })
+                    });
+                  }}
+                >
+                  {publishMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...</> : <><Globe className="mr-2 h-4 w-4" /> Publish</>}
+                </Button>
+              )}
+
+              {/* Create new article as admin: save & publish button */}
+              {!isEditing && currentUser?.role === "admin" && (
+                <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white" disabled={isSaving}>
+                  {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Publishing...</> : <><Globe className="mr-2 h-4 w-4" /> Save & Publish</>}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </div>

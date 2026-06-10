@@ -29,6 +29,7 @@ import type {
   CreateEditorInput,
   EditorUser,
   EngagementStats,
+  GetPendingCount200,
   HealthStatus,
   ListArticlesParams,
   LoginInput,
@@ -1180,6 +1181,293 @@ export const useDeleteArticle = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteArticleMutationOptions(options));
+    }
+
+export const getGetPendingCountUrl = () => {
+
+
+
+
+  return `/api/admin/pending-count`
+}
+
+/**
+ * @summary Get count of articles pending review
+ */
+export const getPendingCount = async ( options?: RequestInit): Promise<GetPendingCount200> => {
+
+  return customFetch<GetPendingCount200>(getGetPendingCountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPendingCountQueryKey = () => {
+    return [
+    `/api/admin/pending-count`
+    ] as const;
+    }
+
+
+export const getGetPendingCountQueryOptions = <TData = Awaited<ReturnType<typeof getPendingCount>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingCountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingCount>>> = ({ signal }) => getPendingCount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingCount>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPendingCountQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingCount>>>
+export type GetPendingCountQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get count of articles pending review
+ */
+
+export function useGetPendingCount<TData = Awaited<ReturnType<typeof getPendingCount>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPendingCountQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitArticleForReviewUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/articles/${id}/submit`
+}
+
+/**
+ * @summary Submit article for admin review
+ */
+export const submitArticleForReview = async (id: number, options?: RequestInit): Promise<Article> => {
+
+  return customFetch<Article>(getSubmitArticleForReviewUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSubmitArticleForReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitArticleForReview>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitArticleForReview>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['submitArticleForReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitArticleForReview>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  submitArticleForReview(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitArticleForReviewMutationResult = NonNullable<Awaited<ReturnType<typeof submitArticleForReview>>>
+
+    export type SubmitArticleForReviewMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit article for admin review
+ */
+export const useSubmitArticleForReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitArticleForReview>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitArticleForReview>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getSubmitArticleForReviewMutationOptions(options));
+    }
+
+export const getPublishArticleUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/articles/${id}/publish`
+}
+
+/**
+ * @summary Publish an article (admin only)
+ */
+export const publishArticle = async (id: number, options?: RequestInit): Promise<Article> => {
+
+  return customFetch<Article>(getPublishArticleUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getPublishArticleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishArticle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishArticle>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['publishArticle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishArticle>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  publishArticle(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishArticleMutationResult = NonNullable<Awaited<ReturnType<typeof publishArticle>>>
+
+    export type PublishArticleMutationError = ErrorType<void>
+
+    /**
+ * @summary Publish an article (admin only)
+ */
+export const usePublishArticle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishArticle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof publishArticle>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getPublishArticleMutationOptions(options));
+    }
+
+export const getUnpublishArticleUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/articles/${id}/unpublish`
+}
+
+/**
+ * @summary Unpublish / send back to draft (admin only)
+ */
+export const unpublishArticle = async (id: number, options?: RequestInit): Promise<Article> => {
+
+  return customFetch<Article>(getUnpublishArticleUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnpublishArticleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpublishArticle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unpublishArticle>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['unpublishArticle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unpublishArticle>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unpublishArticle(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnpublishArticleMutationResult = NonNullable<Awaited<ReturnType<typeof unpublishArticle>>>
+
+    export type UnpublishArticleMutationError = ErrorType<void>
+
+    /**
+ * @summary Unpublish / send back to draft (admin only)
+ */
+export const useUnpublishArticle = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpublishArticle>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unpublishArticle>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUnpublishArticleMutationOptions(options));
     }
 
 export const getListEditorsUrl = () => {

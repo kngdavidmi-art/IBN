@@ -298,6 +298,92 @@ paths:
         "404":
           description: Not found
 
+  /admin/pending-count:
+    get:
+      operationId: getPendingCount
+      tags: [admin]
+      summary: Get count of articles pending review
+      responses:
+        "200":
+          description: Pending count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+
+  /admin/articles/{id}/submit:
+    post:
+      operationId: submitArticleForReview
+      tags: [admin]
+      summary: Submit article for admin review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "400":
+          description: Already published
+        "404":
+          description: Not found
+
+  /admin/articles/{id}/publish:
+    post:
+      operationId: publishArticle
+      tags: [admin]
+      summary: Publish an article (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "403":
+          description: Admin role required
+        "404":
+          description: Not found
+
+  /admin/articles/{id}/unpublish:
+    post:
+      operationId: unpublishArticle
+      tags: [admin]
+      summary: Unpublish / send back to draft (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unpublished
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "403":
+          description: Admin role required
+        "404":
+          description: Not found
+
   /admin/editors:
     get:
       operationId: listEditors
@@ -402,7 +488,7 @@ components:
 
     Article:
       type: object
-      required: [id, title, category, content, author, publishedAt, isFeatured, isBreaking, viewCount]
+      required: [id, title, category, content, author, publishedAt, isFeatured, isBreaking, viewCount, status]
       properties:
         id:
           type: integer
@@ -426,6 +512,9 @@ components:
           type: boolean
         viewCount:
           type: integer
+        status:
+          type: string
+          enum: [draft, pending_review, published]
         publishedAt:
           type: string
           format: date-time
