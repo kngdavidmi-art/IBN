@@ -20,8 +20,8 @@ function requireAdmin(req: any, res: any, next: any) {
   next();
 }
 
-router.use(requireAuth);
-router.use(requireAdmin);
+router.use("/admin", requireAuth);
+router.use("/admin", requireAdmin);
 
 router.get("/admin/editors", async (_req, res) => {
   const editors = await db

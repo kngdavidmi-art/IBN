@@ -7,7 +7,6 @@
  */
 import * as zod from 'zod';
 
-
 /**
  * @summary Health check
  */
@@ -100,6 +99,32 @@ export const GetFeaturedArticlesResponse = zod.array(GetFeaturedArticlesResponse
 
 
 /**
+ * @summary Get most-viewed articles (trending)
+ */
+export const GetTrendingArticlesQueryParams = zod.object({
+  "limit": zod.coerce.number().optional()
+})
+
+export const GetTrendingArticlesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "category": zod.string(),
+  "content": zod.string(),
+  "author": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "isFeatured": zod.boolean(),
+  "isBreaking": zod.boolean(),
+  "viewCount": zod.number(),
+  "status": zod.enum(['draft', 'pending_review', 'published']),
+  "publishedAt": zod.coerce.date(),
+  "createdAt": zod.coerce.date().optional()
+})
+export const GetTrendingArticlesResponse = zod.array(GetTrendingArticlesResponseItem)
+
+
+/**
  * @summary Get article counts by category
  */
 export const GetArticlesSummaryResponse = zod.object({
@@ -135,6 +160,43 @@ export const GetArticleResponse = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'published']),
   "publishedAt": zod.coerce.date(),
   "createdAt": zod.coerce.date().optional()
+})
+
+
+/**
+ * @summary Get approved comments for an article
+ */
+export const GetArticleCommentsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetArticleCommentsResponseItem = zod.object({
+  "id": zod.number(),
+  "articleId": zod.number(),
+  "name": zod.string(),
+  "email": zod.string().nullish(),
+  "content": zod.string(),
+  "approved": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const GetArticleCommentsResponse = zod.array(GetArticleCommentsResponseItem)
+
+
+/**
+ * @summary Submit a comment (pending review)
+ */
+export const PostCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const postCommentBodyContentMax = 2000;
+
+
+
+export const PostCommentBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string().optional(),
+  "content": zod.string().max(postCommentBodyContentMax)
 })
 
 
@@ -178,6 +240,42 @@ export const SignUpBody = zod.object({
   "username": zod.string().min(signUpBodyUsernameMin),
   "email": zod.string().email(),
   "password": zod.string().min(signUpBodyPasswordMin)
+})
+
+
+/**
+ * @summary Request a presigned upload URL
+ */
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary Subscribe to the newsletter
+ */
+export const SubscribeBody = zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().optional()
+})
+
+export const SubscribeResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Unsubscribe from newsletter
+ */
+export const UnsubscribeBody = zod.object({
+  "email": zod.string()
 })
 
 
@@ -459,3 +557,89 @@ export const GetEngagementResponse = zod.object({
 })
 
 
+/**
+ * @summary List newsletter subscribers (admin only)
+ */
+export const ListSubscribersResponseItem = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "active": zod.boolean(),
+  "subscribedAt": zod.coerce.date()
+})
+export const ListSubscribersResponse = zod.array(ListSubscribersResponseItem)
+
+
+/**
+ * @summary Remove a subscriber
+ */
+export const DeleteSubscriberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all comments (admin moderation)
+ */
+export const AdminListCommentsResponseItem = zod.object({
+  "id": zod.number(),
+  "articleId": zod.number(),
+  "name": zod.string(),
+  "email": zod.string().nullish(),
+  "content": zod.string(),
+  "approved": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const AdminListCommentsResponse = zod.array(AdminListCommentsResponseItem)
+
+
+/**
+ * @summary Get pending (unapproved) comments count
+ */
+export const GetPendingCommentsCountResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Approve a comment
+ */
+export const ApproveCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ApproveCommentResponse = zod.object({
+  "id": zod.number(),
+  "articleId": zod.number(),
+  "name": zod.string(),
+  "email": zod.string().nullish(),
+  "content": zod.string(),
+  "approved": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reject a comment
+ */
+export const RejectCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const RejectCommentResponse = zod.object({
+  "id": zod.number(),
+  "articleId": zod.number(),
+  "name": zod.string(),
+  "email": zod.string().nullish(),
+  "content": zod.string(),
+  "approved": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a comment
+ */
+export const DeleteCommentParams = zod.object({
+  "id": zod.coerce.number()
+})

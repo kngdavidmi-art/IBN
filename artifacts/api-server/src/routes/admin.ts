@@ -5,7 +5,7 @@ import { requireAuth } from "./auth";
 
 const router = Router();
 
-router.use(requireAuth);
+router.use("/admin", requireAuth);
 
 router.get("/admin/articles", async (_req, res) => {
   const rows = await db.select().from(articlesTable).orderBy(desc(articlesTable.createdAt));

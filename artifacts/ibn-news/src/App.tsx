@@ -26,6 +26,10 @@ const queryClient = new QueryClient({
   }
 });
 
+import AuthorPage from "@/pages/AuthorPage";
+import AdminComments from "@/pages/AdminComments";
+import AdminNewsletter from "@/pages/AdminNewsletter";
+
 function Router() {
   return (
     <Switch>
@@ -33,6 +37,7 @@ function Router() {
       <Route path="/news/:id" component={ArticleDetail} />
       <Route path="/category/:name" component={Category} />
       <Route path="/search" component={SearchPage} />
+      <Route path="/author/:name" component={AuthorPage} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={SignUp} />
       <Route path="/admin" component={AdminDashboard} />
@@ -41,6 +46,8 @@ function Router() {
       <Route path="/admin/posts/:id/edit" component={AdminPostForm} />
       <Route path="/admin/editors" component={AdminEditors} />
       <Route path="/admin/engagement" component={AdminEngagement} />
+      <Route path="/admin/comments" component={AdminComments} />
+      <Route path="/admin/newsletter" component={AdminNewsletter} />
       <Route component={NotFound} />
     </Switch>
   );

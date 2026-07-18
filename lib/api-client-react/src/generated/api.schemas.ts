@@ -150,6 +150,49 @@ export interface EngagementStats {
   viewsByCategory: EngagementStatsViewsByCategoryItem[];
 }
 
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
+export interface SubscribeInput {
+  email: string;
+  name?: string;
+}
+
+export interface Subscriber {
+  id: number;
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  active: boolean;
+  subscribedAt: string;
+}
+
+export interface Comment {
+  id: number;
+  articleId: number;
+  name: string;
+  /** @nullable */
+  email?: string | null;
+  content: string;
+  approved: boolean;
+  createdAt: string;
+}
+
+export interface CommentInput {
+  name: string;
+  email?: string;
+  /** @maxLength 2000 */
+  content: string;
+}
+
 export type ListArticlesParams = {
 category?: string;
 limit?: number;
@@ -163,7 +206,33 @@ limit?: number;
 offset?: number;
 };
 
+export type GetTrendingArticlesParams = {
+limit?: number;
+};
+
+export type PostComment201 = {
+  message: string;
+  id: number;
+};
+
+export type Subscribe200 = {
+  message: string;
+};
+
+export type Subscribe201 = {
+  message: string;
+  id?: number;
+};
+
+export type UnsubscribeBody = {
+  email: string;
+};
+
 export type GetPendingCount200 = {
+  count: number;
+};
+
+export type GetPendingCommentsCount200 = {
   count: number;
 };
 

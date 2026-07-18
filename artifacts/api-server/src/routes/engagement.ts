@@ -5,7 +5,7 @@ import { requireAuth } from "./auth";
 
 const router = Router();
 
-router.use(requireAuth);
+router.use("/admin", requireAuth);
 
 router.get("/admin/engagement", async (_req, res) => {
   const allArticles = await db

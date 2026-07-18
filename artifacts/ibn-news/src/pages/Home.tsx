@@ -1,9 +1,56 @@
 import { Link } from "wouter";
-import { useGetFeaturedArticles, useListArticles } from "@workspace/api-client-react";
+import { 
+  useGetFeaturedArticles, 
+  useListArticles, 
+  useGetTrendingArticles 
+} from "@workspace/api-client-react";
 import { HeroArticle } from "@/components/ui/HeroArticle";
 import { ArticleCard } from "@/components/ui/ArticleCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NewsletterWidget } from "@/components/NewsletterWidget";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Eye } from "lucide-react";
+
+function TrendingSidebar() {
+  const { data: trending, isLoading } = useGetTrendingArticles({ limit: 5 });
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  return (
+    <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-primary px-4 py-3 flex items-center gap-2 text-primary-foreground">
+        <TrendingUp className="h-5 w-5" />
+        <h3 className="font-bold uppercase tracking-wider text-sm">Most Read</h3>
+      </div>
+      <div className="divide-y">
+        {trending?.map((article, index) => (
+          <Link key={article.id} href={`/news/${article.id}`}>
+            <div className="p-4 hover:bg-muted/50 transition-colors cursor-pointer group">
+              <div className="flex gap-4">
+                <span className="text-2xl font-serif font-bold text-muted-foreground/30 group-hover:text-primary transition-colors">
+                  {index + 1}
+                </span>
+                <div className="space-y-1">
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-tighter h-4 px-1">
+                    {article.category}
+                  </Badge>
+                  <h4 className="font-bold text-sm leading-snug line-clamp-2 group-hover:underline">
+                    {article.title}
+                  </h4>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Eye className="h-3 w-3" />
+                    <span>{article.viewCount} views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { data: featured, isLoading: isLoadingFeatured } = useGetFeaturedArticles();
@@ -104,7 +151,11 @@ export default function Home() {
                )}
             </div>
 
-            <div className="lg:col-span-4 space-y-12">
+            <div className="lg:col-span-4 space-y-8">
+              <TrendingSidebar />
+              
+              <NewsletterWidget />
+
               {/* Latest Feed - compact sidebar */}
               <div className="bg-muted/30 p-6 border rounded-sm">
                 <h3 className="font-bold uppercase tracking-wider text-sm mb-6 flex items-center">

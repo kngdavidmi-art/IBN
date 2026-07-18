@@ -25,6 +25,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, Send, Globe } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { Controller } from "react-hook-form";
+
 const categories = ["World", "Tech", "Business", "Sports", "Entertainment", "Science", "Videos"];
 
 const articleSchema = z.object({
@@ -217,12 +220,17 @@ export default function AdminPostForm() {
             <h2 className="text-lg font-bold border-b pb-2">Media & Placement</h2>
             
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="imageUrl">Featured Image URL</Label>
-                <Input 
-                  id="imageUrl" 
-                  placeholder="https://example.com/image.jpg" 
-                  {...register("imageUrl")} 
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <ImageUploadField 
+                      value={field.value || ""} 
+                      onChange={field.onChange} 
+                      error={errors.imageUrl?.message}
+                    />
+                  )}
                 />
               </div>
 

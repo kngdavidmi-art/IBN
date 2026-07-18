@@ -11,6 +11,9 @@ tags:
   - name: articles
   - name: auth
   - name: admin
+  - name: storage
+  - name: newsletter
+  - name: comments
 paths:
   /healthz:
     get:
@@ -105,6 +108,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/Article"
 
+  /articles/trending:
+    get:
+      operationId: getTrendingArticles
+      tags: [articles]
+      summary: Get most-viewed articles (trending)
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trending articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+
   /articles/summary:
     get:
       operationId: getArticlesSummary
@@ -138,6 +162,60 @@ paths:
                 $ref: "#/components/schemas/Article"
         "404":
           description: Not found
+
+  /articles/{id}/comments:
+    get:
+      operationId: getArticleComments
+      tags: [comments]
+      summary: Get approved comments for an article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: postComment
+      tags: [comments]
+      summary: Submit a comment (pending review)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, id]
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        "400":
+          description: Validation error
+        "404":
+          description: Article not found
 
   /auth/login:
     post:
@@ -204,6 +282,85 @@ paths:
                 $ref: "#/components/schemas/AdminUser"
         "409":
           description: Username already taken
+
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestUploadUrlBody"
+      responses:
+        "200":
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestUploadUrlResponse"
+        "400":
+          description: Validation error
+        "500":
+          description: Storage error
+
+  /newsletter/subscribe:
+    post:
+      operationId: subscribe
+      tags: [newsletter]
+      summary: Subscribe to the newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeInput"
+      responses:
+        "201":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        "200":
+          description: Already subscribed or reactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Invalid email
+
+  /newsletter/unsubscribe:
+    post:
+      operationId: unsubscribe
+      tags: [newsletter]
+      summary: Unsubscribe from newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+      responses:
+        "200":
+          description: Unsubscribed
 
   /admin/articles:
     get:
@@ -477,6 +634,125 @@ paths:
               schema:
                 $ref: "#/components/schemas/EngagementStats"
 
+  /admin/newsletter/subscribers:
+    get:
+      operationId: listSubscribers
+      tags: [admin]
+      summary: List newsletter subscribers (admin only)
+      responses:
+        "200":
+          description: Subscriber list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscriber"
+
+  /admin/newsletter/subscribers/{id}:
+    delete:
+      operationId: deleteSubscriber
+      tags: [admin]
+      summary: Remove a subscriber
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/comments:
+    get:
+      operationId: adminListComments
+      tags: [admin]
+      summary: List all comments (admin moderation)
+      responses:
+        "200":
+          description: All comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+
+  /admin/comments/count:
+    get:
+      operationId: getPendingCommentsCount
+      tags: [admin]
+      summary: Get pending (unapproved) comments count
+      responses:
+        "200":
+          description: Count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+
+  /admin/comments/{id}/approve:
+    patch:
+      operationId: approveComment
+      tags: [admin]
+      summary: Approve a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "404":
+          description: Not found
+
+  /admin/comments/{id}/reject:
+    patch:
+      operationId: rejectComment
+      tags: [admin]
+      summary: Reject a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rejected comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "404":
+          description: Not found
+
+  /admin/comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [admin]
+      summary: Delete a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
   schemas:
     HealthStatus:
@@ -721,3 +997,81 @@ components:
                 type: string
               views:
                 type: integer
+
+    RequestUploadUrlBody:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+
+    RequestUploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+
+    SubscribeInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+
+    Subscriber:
+      type: object
+      required: [id, email, active, subscribedAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        active:
+          type: boolean
+        subscribedAt:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      required: [id, articleId, name, content, approved, createdAt]
+      properties:
+        id:
+          type: integer
+        articleId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+        content:
+          type: string
+        approved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CommentInput:
+      type: object
+      required: [name, content]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        content:
+          type: string
+          maxLength: 2000

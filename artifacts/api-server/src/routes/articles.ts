@@ -21,6 +21,17 @@ router.get("/articles", async (req, res) => {
   res.json(rows);
 });
 
+router.get("/articles/trending", async (req, res) => {
+  const { limit = "5" } = req.query as Record<string, string>;
+  const rows = await db
+    .select()
+    .from(articlesTable)
+    .where(eq(articlesTable.status, "published"))
+    .orderBy(desc(articlesTable.viewCount))
+    .limit(Number(limit));
+  res.json(rows);
+});
+
 router.get("/articles/featured", async (_req, res) => {
   const rows = await db
     .select()

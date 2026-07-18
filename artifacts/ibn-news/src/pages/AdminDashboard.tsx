@@ -1,8 +1,14 @@
-import { useGetArticlesSummary, useGetMe, useGetPendingCount } from "@workspace/api-client-react";
+import { 
+  useGetArticlesSummary, 
+  useGetMe, 
+  useGetPendingCount,
+  useGetPendingCommentsCount,
+  useListSubscribers
+} from "@workspace/api-client-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Zap, Star, LayoutGrid, Clock } from "lucide-react";
+import { BookOpen, Zap, Star, LayoutGrid, Clock, MessageSquare, Mail } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +16,8 @@ export default function AdminDashboard() {
   const { data: summary, isLoading } = useGetArticlesSummary();
   const { data: user } = useGetMe();
   const { data: pendingData } = useGetPendingCount();
+  const { data: pendingComments } = useGetPendingCommentsCount();
+  const { data: subscribers } = useListSubscribers();
 
   if (isLoading) {
     return (
@@ -39,7 +47,7 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Total Articles</CardTitle>
@@ -62,6 +70,30 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
         
+        <Card className="shadow-sm border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Comments Pending</CardTitle>
+            <MessageSquare className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-slate-900">{pendingComments?.count || 0}</div>
+            <p className="text-xs text-slate-500 mt-1">Awaiting moderation</p>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-sm border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Subscribers</CardTitle>
+            <Mail className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-slate-900">{subscribers?.length || 0}</div>
+            <p className="text-xs text-slate-500 mt-1">Newsletter audience</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-8">
         <Card className="shadow-sm border border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Featured Stories</CardTitle>

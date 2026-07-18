@@ -1,12 +1,31 @@
 import { useLocation, Link } from "wouter";
-import { useGetMe, useLogout } from "@workspace/api-client-react";
+import { useGetMe, useLogout, useGetPendingCommentsCount } from "@workspace/api-client-react";
 import { useEffect } from "react";
-import { LayoutDashboard, FileText, PlusCircle, LogOut, Settings, Newspaper, Users, BarChart2 } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  FileText, 
+  PlusCircle, 
+  LogOut, 
+  Settings, 
+  Newspaper, 
+  Users, 
+  BarChart2,
+  MessageSquare,
+  Mail
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: number;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -34,7 +53,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>;
   }
 
-  const navItems = [
+  const { data: pendingComments } = useGetPendingCommentsCount();
+
+  const navItems: NavItem[] = [
     { name: "Dashboard", href: "/admin", icon: <LayoutDashboard className="h-5 w-5" /> },
     { name: "Manage Posts", href: "/admin/posts", icon: <FileText className="h-5 w-5" /> },
     { name: "New Post", href: "/admin/posts/new", icon: <PlusCircle className="h-5 w-5" /> },
@@ -43,7 +64,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   if (user?.role === "admin") {
     navItems.push(
       { name: "Team", href: "/admin/editors", icon: <Users className="h-5 w-5" /> },
-      { name: "Engagement", href: "/admin/engagement", icon: <BarChart2 className="h-5 w-5" /> }
+      { name: "Engagement", href: "/admin/engagement", icon: <BarChart2 className="h-5 w-5" /> },
+      { 
+        name: "Comments", 
+        href: "/admin/comments", 
+        icon: <MessageSquare className="h-5 w-5" />,
+        badge: pendingComments?.count || 0
+      },
+      { name: "Newsletter", href: "/admin/newsletter", icon: <Mail className="h-5 w-5" /> }
     );
   }
 
@@ -80,13 +108,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
-              <span className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${
+              <span className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium ${
                 location === item.href 
                   ? "bg-primary text-white" 
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
               }`}>
-                {item.icon}
-                {item.name}
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  {item.name}
+                </div>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <Badge variant="destructive" className="h-5 min-w-5 flex items-center justify-center text-[10px] px-1">
+                    {item.badge}
+                  </Badge>
+                )}
               </span>
             </Link>
           ))}
